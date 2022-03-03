@@ -35,7 +35,7 @@ sum_all_wedges = function(tuples, W, n) {
 #' @export
 sum_intern_wedges = function(tuples, W) {
   S = to_matrix(tuples)
-  l = length(W) # Tuple length
+  l = length(W) # Tuple size
   ro = asplit(S, 1) # get rows
   k = expand.grid(ro, ro) # all combinations
   idx = apply(k, 1, function(r) {
