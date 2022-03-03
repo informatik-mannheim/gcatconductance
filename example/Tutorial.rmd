@@ -1,0 +1,158 @@
+---
+title: "GCAT Conductance Tutorial"
+author: Markus Gumbel
+date: "`r format(Sys.time(), '%d. %B %Y')`"
+params:
+  devel: TRUE
+output:
+ html_document:
+  toc: true
+  number_sections: true 
+---
+
+_under construction_
+
+```{r include=params$devel, eval=params$devel}
+devtools::load_all(".")
+```
+
+```{r include=!params$devel, eval=!params$devel}
+library(gcatconductance)
+```
+
+```{r echo = F, warning = F, message = F}
+library(knitr)
+library(ggplot2)
+library(gcatbase)
+```
+
+# Definitions
+
+Let $B$ be an alphabet and $n$ the alphabet size. Let $l$ denote the lengths of words. Let $S\subset B^l$ a set of tuples.
+
+$\mathcal{B} = \{A, U, C, G\}$ denotes the bases of the genetic code.
+
+## Weight matrix
+
+A symmetric $n \times n$-matrix where each row and each column represents a (unique) letter from the alphabet $B$ and the diagonal elements are 0 is called a transition matrix.
+$W_{a,b}$ refers to the element in $W$ in row $a$ and column $b$.
+
+Let us define some transitions:
+```{r}
+nucs = list(nuc_bases(), nuc_bases()) # Row and column names
+
+W1 = matrix(1, nrow = 4, ncol = 4) - diag(1, nrow = 4)
+dimnames(W1) = nucs
+
+W3 = matrix(c(
+  0, 20, 1.5, 1,
+  20, 0, 2, 1,
+  1.5, 2, 0, 20,
+  1, 1, 20, 0
+), nrow = 4, dimnames = nucs)
+
+WLutz = matrix(c(
+  0, 4, 2, 2,
+  4, 0, 2, 2,
+  2, 2, 0, 4,
+  2, 2, 4, 0
+), nrow = 4, dimnames = nucs)
+```
+
+## Conductance and robustness
+
+The summed weights of all edges in a set $S$ is defined as:
+$$
+E(S) =
+\underset{\text{ every tuple }}{\underbrace{\sum_{t\in S}}}
+\underset{\text{ every position }}{\underbrace{\sum_{i=1}^l}}
+\underset{\text{ other letters }}{\underbrace{\sum_{b \in B} W_{t_i, b}}}
+$$
+
+The summed weights of all __internal__ edges in a set $S$ is defined as:
+$$
+I(S) = \sum_{\text{all pairs with edges } (t,u) \in S \times S} \sum_{i=1}^l W_{t_i, u_i}
+$$
+
+\underset{every tuple}{\underbrace{\sum_{t\in S}}}
+
+The (set) conductance is ratio of the number of outgoing edges to all edges of $S$.
+$$\varphi(S)=\frac{E(S)-I(S)}{E(S)}$$
+
+The (set) robustness is ratio of the number of internal edges to all edges of $S$.
+$$\rho(S)=\frac{I(S)}{E(S)} = 1 - \varphi(S)$$
+
+# Examples for the conductance
+
+## Set conductance
+
+Let us create some codons first:
+```{r}
+codons = all_tuples(tsize = 3)
+S = codons[1:2]
+print(S)
+```
+
+`W` is a list of matrices for codons (i.e. tuples of size 3) where each transition has the value 1.
+```{r}
+W = list(W1, W1, W1) # W1 see above.
+```
+
+The sum of all edges is:
+```{r}
+e = sum_all_wedges(S, W, 4)
+print(e)
+```
+Please note that the function `sum_all_wedges` needs to know the size of the alphabet (here 4 for all nucleotides). This function cannot derive the alphabet size since the tuples in `S` may only be a subset of all letters.
+
+And the the sum of the internal edges is:
+```{r}
+i = sum_intern_wedges(S, W)
+print(i)
+```
+
+Now the set conductance can be calculated:
+```{r}
+sc = (e - i) / e
+print(sc)
+```
+
+Of course, we can invoke a `gcatconductance` function for this:
+```{r}
+print(set_conductance(S, W, 4))
+```
+
+## Conductance for a partition
+
+Let us now show some examples for the conductance of a partition.
+
+### Random labels
+
+We start with 64 codons that have up to 21 labels (like amino acids) which are randomly assigned. Please note, that some numbers can be missing.
+```{r}
+part = sample(1:21, size = 64, replace = TRUE) # 21 different labels
+l = length(levels(factor(part))) # real number of different labels (classes)
+print(paste0("number of classes: ", l))
+
+label_codons = data.frame(codons, part = part)
+kable(label_codons, sortCol = 1)
+```
+
+Given this partion of the codons, the conductance of this partion is calculated. The first argument is the list (or set) of tuples (here codons), the second argument are the labels for the tuples (codons), and the third parameter contains the weights. Again, we need to help the function and tell the alphabet size (fourth argument).
+
+```{r}
+rand_pc = part_conductance(codons, part, W, 4)
+kable(t(format(rand_pc, digits = 2)))
+print(mean(rand_pc))
+```
+
+### Standard genetic code
+
+From Pawel: "The value of $\bar{\phi}(SGC)$ is equal to 0.811."
+
+```{r}
+aa = amino_acids(codons) # from gcatbase
+sgc_pc = part_conductance(codons, aa, W, 4)
+kable(t(format(sgc_pc, digits = 2)))
+print(mean(sgc_pc))
+```
