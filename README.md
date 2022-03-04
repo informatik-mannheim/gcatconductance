@@ -2,7 +2,7 @@
 
 GCAT Conductance Package (`gcatconductance`) provides some functions to calculate the __conductance__ of a set of tuples (like codons). This can be used to compute a robustness of the genetic code against point mutations (see references).
 
-A more detailed description is available in the tutorial under [examples/Tutorial.Rmd](https://oc.informatik.hs-mannheim.de/s/AwFk4Fq7wzWBtLE/download).
+A more detailed description is available in the tutorial. The soure code can be found in [examples/Tutorial.Rmd](https://github.com/informatik-mannheim/gcatconductance/blob/0dc9bb266e564f882a454c63911f499ae08ee18c/example/Tutorial.rmd) and the [complete document is available here](https://oc.informatik.hs-mannheim.de/s/AwFk4Fq7wzWBtLE/download).
 
 # References
 
