@@ -1,13 +1,46 @@
-# prototype for conductance
+# Copyright 2022 by the authors.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 library(stringi)
 
 # TODO:
 # wedges: make independent of numbers, use any symbol.
 
-#' Calculate sum of weighted edges for a set S.
+#' Weight matrices with all values set to 1.
+#'
+#' Functions like `set_conductance` or `part_conductance` require matrices
+#' with transition values. If the weights of the conductance graph
+#' should be all set to 1, this function can used.
+#' @param alphabet Alphabet as a vector of strings, e.g. A, T, C, G.
+#' @param tsize Tuple size
+#' @return List of size tsize where each entry is a matrix of dimension n times n
+#' and all values excpet for the diagonal are set to 1.
+#' @export
+ones_weights = function(alphabet, tsize) {
+  n = length(alphabet)
+  W = matrix(1, n, n) - diag(1, n, n)
+  dimnames(W) = list(alphabet, alphabet)
+  lapply(1:tsize, function(i) W)
+}
+
+#' Calculate sum of weighted edges for a set of tuples.
+#'
+#' This is a helper function used in set_conductance and part_conductance.
+#'
 #' @param tuples List of tuples represented by a vector of strings.
 #' @param W List of transition weight matrices. The size of the list
-#' must be the tuple size.
+#' must be the tuple size. Each list entry must have matrices of dimensions
+#' n times n (alphabet sizes).
 #' @param n Alphabet size, e.g. |{A, T, C, G}| = 4.
 #' @return Sum of weighted edges.
 #' @export
@@ -27,10 +60,14 @@ sum_all_wedges = function(tuples, W, n) {
   sum(s)
 }
 
-
-#' Calculate sum of internal weighted edges for a set S.
+#' Calculate sum of internal weighted edges for a set of tuples.
+#'
+#' This is a helper function used in set_conductance and part_conductance.
+#' 
 #' @param tuples List of tuples represented by a vector of strings.
-#' @param W List of transition weights.
+#' @param W List of transition weight matrices. The size of the list
+#' must be the tuple size. Each list entry must have matrices of dimensions
+#' n times n (alphabet sizes).
 #' @return Sum of weighted internal edges.
 #' @export
 sum_intern_wedges = function(tuples, W) {
@@ -67,11 +104,14 @@ sum_intern_wedges = function(tuples, W) {
   sum(s)
 }
 
-#' Calculate the conductance for a set S of tuples.
+#' Calculate the conductance for a set of tuples.
+#'
 #' @param tuples List of tuples represented by a vector of strings.
-#' @param W List of transition weights matrices.
+#' @param W List of transition weight matrices. The size of the list
+#' must be the tuple size. Each list entry must have matrices of dimensions
+#' n times n (alphabet sizes).
 #' @param n Alphabet size, e.g. |{A, T, C, G}| = 4.
-#' @return Set conductane.
+#' @return Set conductance
 #' @export
 set_conductance = function(tuples, W, n) {
   i = sum_intern_wedges(tuples, W)
@@ -83,7 +123,9 @@ set_conductance = function(tuples, W, n) {
 #'
 #' @param tuples List of tuples represented by a vector of strings.
 #' @param p Partitions for tuples. The size of p must match the size of tuples.
-#' @param W List of transition weights matrices.
+#' @param W List of transition weight matrices. The size of the list
+#' must be the tuple size. Each list entry must have matrices of dimensions
+#' n times n (alphabet sizes).
 #' @param n Alphabet size, e.g. |{A, T, C, G}| = 4.
 #' @return Vector of set partitions
 #' @export

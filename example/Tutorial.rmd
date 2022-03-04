@@ -10,8 +10,6 @@ output:
   number_sections: true 
 ---
 
-_under construction_
-
 ```{r include=params$devel, eval=params$devel}
 devtools::load_all(".")
 ```
@@ -28,9 +26,7 @@ library(gcatbase)
 
 # Definitions
 
-Let $B$ be an alphabet and $n$ the alphabet size. Let $l$ denote the lengths of words. Let $S\subset B^l$ a set of tuples.
-
-$\mathcal{B} = \{A, U, C, G\}$ denotes the bases of the genetic code.
+Let $B$ be an alphabet and $n$ the alphabet size. Let $l$ denote the lengths of words. Let $S\subset B^l$ a set of tuples. For instance, $\mathcal{B} = \{A, T, C, G\}$ denotes the bases of the genetic code.
 
 ## Weight matrix
 
@@ -49,13 +45,6 @@ W3 = matrix(c(
   20, 0, 2, 1,
   1.5, 2, 0, 20,
   1, 1, 20, 0
-), nrow = 4, dimnames = nucs)
-
-WLutz = matrix(c(
-  0, 4, 2, 2,
-  4, 0, 2, 2,
-  2, 2, 0, 4,
-  2, 2, 4, 0
 ), nrow = 4, dimnames = nucs)
 ```
 
@@ -84,11 +73,58 @@ $$\rho(S)=\frac{I(S)}{E(S)} = 1 - \varphi(S)$$
 
 # Examples for the conductance
 
-## Set conductance
+## Set conductance (`set_conductance`, `one_weights`)
 
-### Codons ($l=3$)
+### Minimal case ($l=2, n=2$)
 
-Let us create some codons first:
+Let us start with a minimal example: A tuple size of $l=2$ and alphabet size $n=2$ is used. The alphabet is A and T, and the words are AA, AT, TA and TT. As an example we define a set $S=AA, AT$.
+
+```{r}
+tuples = c("AA", "AT")
+```
+
+Next we like to compute the sum of the internal and the sum of all edges for $S$. The weigts are set to 1 for all transitions. We could define a matrix manually and build the lists:
+
+```{r}
+W = matrix(1, 2, 2) - diag(1, 2, 2)
+dimnames(W) = list(c("A", "T"), c("A", "T"))
+w = list(W, W)
+print(w)
+```
+
+It is important to set labels for the rows and columns (`dimnames`). There is the function `ones_weights` which does the same and also gives a list of matrices:
+
+```{r}
+w = ones_weights(c("A", "T"), 2)
+```
+
+The sum of internal weights is 2, as there a directed edges (with weight 1) from AA to AT and AT to AA.
+```{r}
+i = sum_intern_wedges(tuples, w)
+print(i)
+```
+
+The sum of all edges $e$ is $i$ plus the outgoing edges from AA to AT and AT to TT.
+```{r}
+e = sum_all_wedges(tuples, w, 2)
+print(e)
+```
+Please note that the function `sum_all_wedges` needs to know the size of the alphabet (here 2). This function cannot derive the alphabet size since the tuples in `S` may only be a subset of all letters.
+
+This enables us to calculate the set conductance for `tuples` $S$:
+```{r}
+sc = (e - i) / e
+print(sc)
+```
+
+Of course, we can invoke the `gcatconductance` function `set_conductance` for this:
+```{r}
+print(set_conductance(tuples, w, 2))
+```
+
+### Codons ($l=3, n=4$)
+
+Let us move on to codons and create some codons first:
 ```{r}
 codons = all_tuples(tsize = 3)
 S = codons[1:2]
@@ -100,7 +136,6 @@ print(S)
 e = sum_all_wedges(S, list(W1, W1, W1), 4)
 print(e)
 ```
-Please note that the function `sum_all_wedges` needs to know the size of the alphabet (here 4 for all nucleotides). This function cannot derive the alphabet size since the tuples in `S` may only be a subset of all letters.
 
 And the the sum of the internal edges is:
 ```{r}
@@ -114,24 +149,25 @@ sc = (e - i) / e
 print(sc)
 ```
 
-Of course, we can invoke a `gcatconductance` function for this:
+Or alternatively:
 ```{r}
 print(set_conductance(S, list(W1, W1, W1), 4))
 ```
 
-### Tuples ($l=2$)
+### Codons with different weights
+
+Now different weight matrices are used. The third codon position has the matrix `W3`.
 
 ```{r}
-tuples2 = all_tuples(2)
-S = tuples2[1:3]
-print(S)
+print(W3)
 ```
 
+This leads to a better conductance:
 ```{r}
-print(set_conductance(S, list(W1, W1), 4))
+print(set_conductance(S, list(W1, W1, W3), 4))
 ```
 
-## Conductance for a partition
+## Conductance for a partition (`part_conductance`)
 
 Let us now show some examples for the conductance of a partition.
 
@@ -139,7 +175,7 @@ Let us now show some examples for the conductance of a partition.
 
 We start with 64 codons that have up to 21 labels (like amino acids) which are randomly assigned. Please note, that some numbers can be missing.
 ```{r}
-part = sample(1:21, size = 64, replace = TRUE) # 21 different labels
+part = sample(LETTERS[1:21], size = 64, replace = TRUE) # 21 different labels
 l = length(levels(factor(part))) # real number of different labels (classes)
 print(paste0("number of classes: ", l))
 
@@ -147,24 +183,35 @@ label_codons_1 = data.frame(codons = codons[1:16], part = part[1:16])
 label_codons_2 = data.frame(codons = codons[17:32], part = part[17:32])
 label_codons_3 = data.frame(codons = codons[33:48], part = part[33:48])
 label_codons_4 = data.frame(codons = codons[49:64], part = part[49:64])
-kable(list(label_codons_1, label_codons_2, label_codons_3, label_codons_4), sortCol = 1, booktabs = TRUE)
+kable(list(label_codons_1, label_codons_2, label_codons_3, label_codons_4), booktabs = TRUE)
 ```
 
 Given this partion of the codons, the conductance of this partion is calculated. The first argument is the list (or set) of tuples (here codons), the second argument are the labels for the tuples (codons), and the third parameter contains the weights. Again, we need to help the function and tell the alphabet size (fourth argument).
 
 ```{r}
-rand_pc = part_conductance(codons, part, W, 4)
+rand_pc = part_conductance(codons, part, list(W1, W1, W1), 4)
 kable(t(format(rand_pc, digits = 2)))
 print(mean(rand_pc))
 ```
+
+We see that the average partition conductance is quite worse and close to 1.
 
 ### Standard genetic code
 
 From Pawel: "The value of $\bar{\phi}(SGC)$ is equal to 0.811."
 
+The average partition conductance for the standard genetic code is this:
 ```{r}
 aa = amino_acids(codons) # from gcatbase
-sgc_pc = part_conductance(codons, aa, W, 4)
+sgc_pc = part_conductance(codons, aa, list(W1, W1, W1), 4)
 kable(t(format(sgc_pc, digits = 2)))
 print(mean(sgc_pc))
+```
+
+The average partition conductance will improve if the third codon uses different transition weights (`W3`):
+
+```{r}
+sgc2_pc = part_conductance(codons, aa, list(W1, W1, W3), 4)
+kable(t(format(sgc2_pc, digits = 2)))
+print(mean(sgc2_pc))
 ```

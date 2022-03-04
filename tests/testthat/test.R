@@ -16,11 +16,14 @@ library(testthat)
 
 context("conductance") # Infos
 
-test_that("Code", {
-  nucs = list(nuc_bases(), nuc_bases()) # Row and column names
-  W1 = matrix(1, nrow = 4, ncol = 4) - diag(1, nrow = 4)
-  dimnames(W1) = nucs
-  
-  sc = set_conductance("ATG", list(W1, W1, W1), 4)
+test_that("2", {
+  w = ones_weights(c("A", "T"), 2)
+  sc = set_conductance(c("AA", "AT"), w, 2)
+  expect_equal(sc, 0.5)
+})
+
+test_that("Codon", {
+  w = ones_weights(nuc_bases(), 3)
+  sc = set_conductance("ATG", w, 4)
   expect_equal(sc, 1)
 })
