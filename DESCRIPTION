@@ -1,6 +1,6 @@
 Package: gcatconductance
-Title: Genetic Code Analysis Toolkit for R - Conductance package
-Version: 0.1.2
+Title: Genetic Code Analysis Toolkit for R - Conductance package (gcatconductance)
+Version: 0.1.3
 Authors@R: 
     person(given = "Markus",
            family = "Gumbel",
@@ -11,7 +11,7 @@ Author: Markus Gumbel [aut, cre], Martin Starman [aut, cre]
 Maintainer: Markus Gumbel <m.gumbel@hs-mannheim.de>
 Depends: R (>= 3.6.0), stringi
 Suggests: testthat
-Description: What the package does (one paragraph).
+Description: This package provides some functions to calculate the conductance of a set of tuples (like codons). This can be used to compute a robustness of the genetic code against point mutations.
 License: Apache License, Version 2.0
 Encoding: UTF-8
 LazyData: true
