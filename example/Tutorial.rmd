@@ -2,7 +2,7 @@
 title: "GCAT Conductance Tutorial"
 author: Markus Gumbel
 date: "`r format(Sys.time(), '%d. %B %Y')`"
-params:
+params: 
   devel: TRUE
 output:
  html_document:
