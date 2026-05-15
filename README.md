@@ -9,7 +9,7 @@ This project contains the source code for the R version of the Genetic Code Anal
 `gcatconductance` is available for R version 4.0 or higher. Starting a new R console and run:
 ```R
 install.packages("devtools")
-devtools::install_github("/informatik-mannheim/gcatconductance")
+devtools::install_github("informatik-mannheim/gcatconductance")
 ```
 
 ## Usage
